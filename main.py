@@ -8,10 +8,15 @@ from sendgrid.helpers.mail import Email, Content, Substitution, Mail
 
 
 def welcome_mailer(request):
-    """Send welcome email."""
+    """Send welcome email to newly acquired user."""
     api_key = os.environ.get("SENDGRID_API_KEY")
     sg = sendgrid.SendGridAPIClient(apikey=api_key)
     if request.method == "POST":
+        headers = {
+            'Access-Control-Allow-Origin': 'hackersandslackers.com',
+            'Access-Control-Allow-Methods': 'POST',
+            'Content-Type': 'application/json'
+        }
         post_data = request.data
         data_dict = json.loads(post_data)
         print('data_dict = ', data_dict)
@@ -27,7 +32,7 @@ def welcome_mailer(request):
             mail.template_id = os.environ["TEMPLATE_ID"]
             try:
                 response = sg.client.mail.send.post(request_body=mail.get())
-                return make_response('it worked!', 200)
+                return make_response('it worked!', 200, headers)
             except urllib.HTTPError as e:
                 print(e.read())
                 sys.stdout.flush()
@@ -37,5 +42,5 @@ def welcome_mailer(request):
                 sys.stdout.flush()
                 print(response.headers)
                 sys.stdout.flush()
-                return make_response(e.read(), 500)
+                return make_response(e.read(), 500, headers)
     return make_response('Wrong method passed!', 400)
