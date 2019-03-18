@@ -2,14 +2,15 @@ import sys
 import urllib.request as urllib
 import json
 import os
-from flask import Flask, request, make_response
+from flask import request, make_response
 import sendgrid
-from sendgrid.helpers.mail import Email, Content, Substitution, Mail
+from sendgrid.helpers.mail import Email, Mail
 
 
 def welcome_mailer(request):
     """Send welcome email to newly acquired user."""
     api_key = os.environ.get("SENDGRID_API_KEY")
+    from_email = Email(os.environ.get("SENDGRID_FROM_EMAIL"))
     sg = sendgrid.SendGridAPIClient(apikey=api_key)
     if request.method == "POST":
         headers = {
@@ -24,12 +25,11 @@ def welcome_mailer(request):
         subscribers = data_dict['subscribers']
         for subscriber in subscribers:
             to_email = Email(subscriber['email'])
-            from_email = Email(os.environ["FROM_EMAIL"])
             subject = "Welcome to Hackers & Slackers"
             print("subscriber['email'] = ", subscriber['email'])
             sys.stdout.flush()
             mail = Mail(from_email, subject, to_email)
-            mail.template_id = os.environ["TEMPLATE_ID"]
+            mail.template_id = os.environ.get("SENDGRID_TEMPLATE_ID")
             try:
                 response = sg.client.mail.send.post(request_body=mail.get())
                 return make_response('it worked!', 200, headers)
